@@ -3,7 +3,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/backend ./cmd/...
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/backend ./cmd/api
 
 FROM alpine:3.19
 RUN adduser -D -u 1000 appuser
