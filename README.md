@@ -11,17 +11,27 @@
 
 ## Структура
 .
-├── backend/ # Go-приложение
-│ ├── Dockerfile
-│ └── .dockerignore
-├── frontend/ # Vue.js приложение
-│ ├── Dockerfile
-│ ├── nginx.conf
-│ └── .dockerignore
-├── .github/workflows/deploy.yaml
-├── docker-compose.yml
-├── .env.example
-└── README.md
+├── backend/ # Go-приложение 
+
+│ ├── Dockerfile 
+
+│ └── .dockerignore 
+
+├── frontend/ # Vue.js приложение 
+
+│ ├── Dockerfile 
+
+│ ├── nginx.conf 
+
+│ └── .dockerignore 
+
+├── .github/workflows/deploy.yaml 
+
+├── docker-compose.yml 
+
+├── .env.example 
+
+└── README.md 
 
  
 ## Запуск
