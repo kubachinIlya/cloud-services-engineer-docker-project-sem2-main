@@ -1,6 +1,33 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+
   backend:
     build:
       context: ./backend
@@ -8,19 +35,25 @@ services:
     image: ${DOCKER_USER}/docker-project-backend:latest
     container_name: backend
     restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
     networks:
-      - app-network
+      - backend-network
+      - frontend-network
     ports:
       - "8081:8081"
-    environment:
-      - DB_HOST=db
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -31,6 +64,8 @@ services:
       - /tmp
     cap_drop:
       - ALL
+    security_opt:
+      - no-new-privileges:true
 
   frontend:
     build:
@@ -39,8 +74,10 @@ services:
     image: ${DOCKER_USER}/docker-project-frontend:latest
     container_name: frontend
     restart: unless-stopped
+    env_file:
+      - .env
     networks:
-      - app-network
+      - frontend-network
     ports:
       - "80:8080"
     depends_on:
@@ -51,6 +88,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -59,12 +97,20 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+      - /var/cache/nginx
+      - /var/run
     cap_drop:
       - ALL
+    security_opt:
+      - no-new-privileges:true
 
 networks:
-  app-network:
+  frontend-network:
     driver: bridge
+  backend-network:
+    driver: bridge
+    internal: true
 
 volumes:
   db_data:
+    driver: local
